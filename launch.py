@@ -42,7 +42,6 @@ motionCounter = 0
 for f in camera.capture_continuous(stream, format="bgr", use_video_port=True):
     frame = f.array
     timestamp = datetime.datetime.now()
-    text = ""
     motion_detected = False
 
     frame = imutils.resize(frame, width=500)
@@ -57,10 +56,9 @@ for f in camera.capture_continuous(stream, format="bgr", use_video_port=True):
 
     cv2.accumulateWeighted(gray, avg, 0.5)
     frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(avg))
-
-    thres = cv2.threshold(frameDelta, conf["delta_threshold"], 255, cv2.THRESH_BINARY)[1]
-    thres = cv2.dilate(thres, None, iterations=2)
-    contours = cv2.findContours(thres.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    threshold = cv2.threshold(frameDelta, conf["delta_threshold"], 255, cv2.THRESH_BINARY)[1]
+    threshold = cv2.dilate(threshold, None, iterations=2)
+    contours = cv2.findContours(threshold.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(contours)
 
     for c in contours:
@@ -69,24 +67,24 @@ for f in camera.capture_continuous(stream, format="bgr", use_video_port=True):
             white.off()
             continue
 
-        #compute bounding box
+        # compute bounding box
         (x, y, w, h) = cv2.boundingRect(c)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         motion_detected = True
-        white.on()
+
+    white.on()
 
     ts = timestamp.strftime("%A %d %B %Y %I:%M:%Sp")
     cv2.putText(frame, "Motion Detected", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
     cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
-    
+
     # Show video feed
     if conf["show_video"]:
         cv2.imshow("Feed", frame)
-        
+
         # Quit using the 'q' key
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
             break
-        
-    stream.truncate(0)
 
+    stream.truncate(0)
