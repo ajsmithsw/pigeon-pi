@@ -1,4 +1,3 @@
-# from pyimagesearch.tempimage import TempImage
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 from gpiozero import LED
